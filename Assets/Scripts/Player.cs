@@ -1,86 +1,109 @@
+using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] GameObject baby, bassinet;
-    public bool inRange_baby, hasBaby, inRange_bassinet;
-[SerializeField] GameObject actionDial;
-[SerializeField] TextMeshProGUI UItext;
+    [SerializeField] GameObject baby, bassinet, changeTable;
+    Baby baby_;
+    bool hasBaby, checking;
+    [SerializeField] float contactDistance = 2;
+    //[SerializeField] GameObject actionDial;
+    [SerializeField] TextMeshProUGUI UI_text;
+    
 
     void Awake()
     {
-actionDial.SstActive(false);
-        resetBabyPos();
+        baby_ = baby.GetComponent<Baby>();
+        //actionDial.SetActive(false);
+        resetBabyPos(bassinet.transform);
     }
 
     void Update()
     {
 
-if (Input.GetKeyDown(Keycode.Mouse1))
-{
-actionDial.SetActive(true);
-}
-
-RaycastHit hit;
-if (Physics.Raycast(transform.position, Vector3.forward*4, out hit, Color.red)
-{
-if (!hasBaby && hit.transform.tag == "baby") { showText("Pick up baby"); }
-else if (hasBaby && hit.transform.tag == "Bassinet")
-{ showText("Put down baby"); }
-}
-else showText("");
-
-
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (hasBaby && Input.GetKeyDown(KeyCode.Mouse2))
         {
-RaycastHit hit;
-Debug.DrawLine(transform.position, Vector3.forward*4, Color.red);
-//if (!hasBaby && Physics.SphereCast(baby.transform.position, 5, transform.forward, out hit, 4, layerMask playerLayer)
-if (!hasBaby && Physics.Raycast(transform.position, Vector3.forward, out hit, 4, layerMask babyLayer) //repeat for each station
-            //if (inRange_baby && !hasBaby)
+            //actionDial.SetActive(true);
+            checkOnBaby();
+        }
+
+        if (!checking && Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, contactDistance))
+        {
+            if (!hasBaby && hit.collider.CompareTag("Baby"))
             {
-                hasBaby = true;
-                inRange_baby = false;
-                baby.transform.SetParent(transform);
-                baby.transform.localPosition = new Vector3(0,0.4f,1.2f);
-                baby.transform.localEulerAngles = Vector3.forward * 90;
+                showText("Pick up baby");
+                if (Input.GetKeyDown(KeyCode.Mouse0))
+                {
+                    hasBaby = true;
+                    // baby.transform.SetParent(Camera.main.transform);
+                    resetBabyPos(Camera.main.transform);
+                    showText("");
+                }
             }
-            else if (inRange_bassinet && hasBaby)
+            else if (hasBaby && hit.collider.CompareTag("Bassinet"))
             {
-                hasBaby = false;
-                inRange_bassinet = false;
-                resetBabyPos();
+                showText("Put down baby");
+                if (Input.GetKeyDown(KeyCode.Mouse0))
+                {
+                    hasBaby = false;
+                    resetBabyPos(bassinet.transform);
+                    showText("");
+                }
             }
+            else if (hasBaby && hit.collider.CompareTag("Change table"))
+            {
+                showText("Put down baby");
+                if (Input.GetKeyDown(KeyCode.Mouse0))
+                {
+                    hasBaby = false;
+                    resetBabyPos(changeTable.transform);
+                    showText("");
+                }
+            }
+            else showText("");
+        }
+        else if (checking && Input.GetKeyDown(KeyCode.Mouse2))
+        {
+            resetBabyPos(Camera.main.transform);
+        }
+        else showText("");
+    }
+
+    void resetBabyPos(Transform parent)
+    {
+        // if (parent is not null) baby.transform.SetParent(parent);
+        baby_.parent = parent;
+        baby.transform.eulerAngles = baby_.parent.eulerAngles + Vector3.forward * 90;
+        if (hasBaby)
+        {
+            baby.transform.SetParent(Camera.main.transform);
+            baby.transform.localPosition = new Vector3(0, -0.4f, 0.6f);
+        }
+        else
+        {
+            baby.transform.SetParent(null);
+            baby.transform.position = baby_.parent.position + Vector3.up * 0.8f;
         }
     }
 
-    void resetBabyPos()
+    void showText(string msg)
     {
-        baby.transform.SetParent(null);
-        baby.transform.position = bassinet.transform.position + Vector3.up * 0.8f;
-        baby.transform.eulerAngles = bassinet.transform.eulerAngles + Vector3.forward * 90;
+        UI_text.text = msg;
     }
 
-void showText(string msg) {
-UItext.text = msg
-}
-
-public void checkOnBaby()
-{
-baby.transform.localPosition.LeanMoveY(5,3);
-LeanTween(baby.transform.localEulerAngles.z, 0, 3);
-}
-
-    void OnTriggerEnter(Collider other)
+    public void checkOnBaby()
     {
-        if (!hasBaby && other.tag == "Baby") inRange_baby = true;
-        else if (hasBaby && other.tag == "Bassinet") inRange_bassinet = true;
+        checking = true;
+        baby.transform.localPosition = new Vector3(0, -0.15f, 0.7f);
+        baby.transform.localEulerAngles = Vector3.zero;
+    // baby.transform.localPosition.LeanMoveY(5,3);
+    // LeanTween(baby.transform.localEulerAngles.z, 0, 3);
     }
 
-    void OnTriggerExit(Collider other)
+    void OnDrawGizmos()
     {
-        if (!hasBaby && other.tag == "Baby") inRange_baby = false;
-        else if (hasBaby && other.tag == "Bassinet") inRange_bassinet = false;
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(Camera.main.transform.position, Camera.main.transform.position + (Camera.main.transform.forward*contactDistance));
     }
 
 void OnDrawGizmos() {
