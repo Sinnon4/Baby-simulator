@@ -105,4 +105,11 @@ public class Player : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawLine(Camera.main.transform.position, Camera.main.transform.position + (Camera.main.transform.forward*contactDistance));
     }
+
+void OnDrawGizmos() {
+Gizmos.color = Color.red;
+Gizmos.DrawWireSphere(baby.transform.position, 5)
+Gizmos.DrawLine(baby.transform.position, baby.transform.position + Vector3.forward*4);
+}
+
 }
