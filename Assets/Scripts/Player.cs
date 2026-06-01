@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] Transform baby, babyParent, bassinet, changeTable;
-    //Baby baby_;
-    bool hasBaby, checking;
+    [SerializeField] Transform baby, babyParent, bassinet, changeTable, swing;
+    Baby babyScript;
+    bool hasBaby, checking, feeding, cleaned;
     [SerializeField] float contactDistance = 2;
     //[SerializeField] GameObject actionDial;
     [SerializeField] TextMeshProUGUI UI_text;
@@ -13,30 +13,45 @@ public class Player : MonoBehaviour
 
     void Awake()
     {
-        //actionDial.SetActive(false);
+        babyScript = FindAnyObjectByType<Baby>();
         resetBabyPos(bassinet);
     }
 
     void Update()
     {
-
-        if (hasBaby && Input.GetKeyDown(KeyCode.Mouse2))
+        if (hasBaby && !feeding && Input.GetKeyDown(KeyCode.Mouse2))
         {
-            //actionDial.SetActive(true);
-            checkOnBaby();
+            feeding = true;
+            babyScript.audioSource.Stop();
+            showText("feeding");
+        }
+        else if (hasBaby && feeding && Input.GetKeyDown(KeyCode.Mouse2))
+        {
+            feeding = false;
+            if (babyScript.reasonID == 0) babyScript.sleeps();
+            else babyScript.audioSource.Play();
         }
 
-        if (!checking && Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, contactDistance))
+        if (!checking && !feeding && Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, contactDistance))
         {
             if (!hasBaby && hit.collider.CompareTag("Baby"))
             {
-                showText("Pick up baby");
+                if (babyParent == changeTable) showText("Pick up/clean baby");
+                else showText("Pick up baby");
+
                 if (Input.GetKeyDown(KeyCode.Mouse0))
                 {
                     hasBaby = true;
-                    // baby.transform.SetParent(Camera.main.transform);
                     resetBabyPos(Camera.main.transform);
                     showText("");
+
+                    if (babyScript.isSleeping && Random.Range(0f,1f) < 0.3f) babyScript.wakeUpBaby();
+                    else if (cleaned && babyScript.reasonID == 1) babyScript.sleeps();
+                }
+                else if (babyParent == changeTable && Input.GetKeyDown(KeyCode.Mouse2))
+                {
+                    print("cleaned nappy");
+                    cleaned = true;
                 }
             }
             else if (hasBaby && hit.collider.CompareTag("Bassinet"))
@@ -47,6 +62,9 @@ public class Player : MonoBehaviour
                     hasBaby = false;
                     resetBabyPos(bassinet);
                     showText("");
+
+                    // babyScript.wakeUpBaby();
+                    // babyScript.reasonID = 1;
                 }
             }
             else if (hasBaby && hit.collider.CompareTag("Change table"))
@@ -59,28 +77,48 @@ public class Player : MonoBehaviour
                     showText("");
                 }
             }
+            else if (hasBaby && hit.collider.CompareTag("Swing"))
+            {
+                showText("Put baby in swing");
+                if (Input.GetKeyDown(KeyCode.Mouse0))
+                {
+                    hasBaby = false;
+                    resetBabyPos(swing);
+                    showText("");
+
+                    if (babyScript.reasonID == 2) babyScript.sleeps();
+                }
+            }
             else showText("");
         }
         else if (checking && Input.GetKeyDown(KeyCode.Mouse2))
         {
             resetBabyPos(Camera.main.transform);
         }
-        else showText("");
+        else if (!feeding) showText("");
     }
 
     void resetBabyPos(Transform parent)
     {
         babyParent = parent;
         baby.eulerAngles = babyParent.eulerAngles + Vector3.forward * 90;
-        if (hasBaby)
+
+        if (parent == swing)
         {
-            baby.SetParent(Camera.main.transform);
-            baby.localPosition = new Vector3(0, -0.4f, 0.6f);
+            baby.SetParent(swing);
         }
         else
         {
-            baby.SetParent(null);
-            baby.position = babyParent.position + Vector3.up * 0.8f;
+            if (hasBaby)
+            {
+                baby.SetParent(Camera.main.transform);
+                baby.localPosition = new Vector3(0, -0.4f, 0.6f);
+            }
+            else
+            {
+                baby.SetParent(null);
+                baby.position = babyParent.position + Vector3.up * 0.8f;
+            }
         }
     }
 
@@ -89,7 +127,7 @@ public class Player : MonoBehaviour
         if (UI_text.text != msg) UI_text.text = msg;
     }
 
-    public void checkOnBaby()
+    void checkOnBaby()
     {
         checking = true;
         baby.localPosition = new Vector3(0, -0.15f, 0.7f);
