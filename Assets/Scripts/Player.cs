@@ -62,9 +62,6 @@ public class Player : MonoBehaviour
                     hasBaby = false;
                     resetBabyPos(bassinet);
                     showText("");
-
-                    // babyScript.wakeUpBaby();
-                    // babyScript.reasonID = 1;
                 }
             }
             else if (hasBaby && hit.collider.CompareTag("Change table"))

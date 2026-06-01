@@ -55,8 +55,7 @@ public class Baby : MonoBehaviour
         audioSource.Play();
 
         isSleeping = false;
-        // reasonID = 2;
-        reasonID = Random.Range(0,3); //TEMP
+        reasonID = 2;
     }
 
     public void sleeps()
