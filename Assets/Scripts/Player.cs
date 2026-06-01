@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] GameObject baby, bassinet, changeTable;
-    Baby baby_;
+    [SerializeField] Transform baby, babyParent, bassinet, changeTable;
+    //Baby baby_;
     bool hasBaby, checking;
     [SerializeField] float contactDistance = 2;
     //[SerializeField] GameObject actionDial;
@@ -13,9 +13,8 @@ public class Player : MonoBehaviour
 
     void Awake()
     {
-        baby_ = baby.GetComponent<Baby>();
         //actionDial.SetActive(false);
-        resetBabyPos(bassinet.transform);
+        resetBabyPos(bassinet);
     }
 
     void Update()
@@ -46,7 +45,7 @@ public class Player : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Mouse0))
                 {
                     hasBaby = false;
-                    resetBabyPos(bassinet.transform);
+                    resetBabyPos(bassinet);
                     showText("");
                 }
             }
@@ -56,7 +55,7 @@ public class Player : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Mouse0))
                 {
                     hasBaby = false;
-                    resetBabyPos(changeTable.transform);
+                    resetBabyPos(changeTable);
                     showText("");
                 }
             }
@@ -71,31 +70,30 @@ public class Player : MonoBehaviour
 
     void resetBabyPos(Transform parent)
     {
-        // if (parent is not null) baby.transform.SetParent(parent);
-        baby_.parent = parent;
-        baby.transform.eulerAngles = baby_.parent.eulerAngles + Vector3.forward * 90;
+        babyParent = parent;
+        baby.eulerAngles = babyParent.eulerAngles + Vector3.forward * 90;
         if (hasBaby)
         {
-            baby.transform.SetParent(Camera.main.transform);
-            baby.transform.localPosition = new Vector3(0, -0.4f, 0.6f);
+            baby.SetParent(Camera.main.transform);
+            baby.localPosition = new Vector3(0, -0.4f, 0.6f);
         }
         else
         {
-            baby.transform.SetParent(null);
-            baby.transform.position = baby_.parent.position + Vector3.up * 0.8f;
+            baby.SetParent(null);
+            baby.position = babyParent.position + Vector3.up * 0.8f;
         }
     }
 
     void showText(string msg)
     {
-        UI_text.text = msg;
+        if (UI_text.text != msg) UI_text.text = msg;
     }
 
     public void checkOnBaby()
     {
         checking = true;
-        baby.transform.localPosition = new Vector3(0, -0.15f, 0.7f);
-        baby.transform.localEulerAngles = Vector3.zero;
+        baby.localPosition = new Vector3(0, -0.15f, 0.7f);
+        baby.localEulerAngles = Vector3.zero;
     // baby.transform.localPosition.LeanMoveY(5,3);
     // LeanTween(baby.transform.localEulerAngles.z, 0, 3);
     }
