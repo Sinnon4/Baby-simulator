@@ -5,9 +5,14 @@ TagManager:
   serializedVersion: 3
   tags:
   - Baby
-  - Bassinet
   - Change table
   - Swing
+  - Nappies
+  - Wipes
+  - Clothes
+  - Bin
+  - Dirty nappy
+  - Crib
   layers:
   - Default
   - TransparentFX
@@ -15,7 +20,7 @@ TagManager:
   - Ground
   - Water
   - UI
-  - 
+  - Player
   - 
   - 
   - 
