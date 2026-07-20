@@ -45,7 +45,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse1)) //right click
+        if (Input.GetKeyDown(KeyCode.Mouse2)) //middle click
         {
             if (!stopMouse)
             {

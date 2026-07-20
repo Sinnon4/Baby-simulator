@@ -19,7 +19,9 @@ Thermometer on wall next to fan switch shows temperature
 Baby hunger percentage to determine if needs feed (not shown in UI)
 Tutorial explains guide to when baby needs each thing
 ------------------------------------------*/
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Baby : MonoBehaviour
 {
@@ -29,32 +31,48 @@ public class Baby : MonoBehaviour
     1 - dirty
     2 - annoyed
     */
-    public bool isSleeping;
+    public bool isSleeping, isSoothing, hasNappy;
+    [SerializeField] TextMeshProUGUI cryUI; //make indep script for handling UI text
+    [SerializeField] Slider crySlider;
 
     [Header("Audio")]
-    public AudioSource audioSource;
-    [SerializeField] AudioClip cryingClip;
-    [SerializeField] float vol = 1;
+    [SerializeField] public AudioSource audioSource;
 
     void Awake()
     {
-        audioSource = GetComponent<AudioSource>();
-        audioSource.clip = cryingClip;
-        audioSource.volume = vol;
-        audioSource.loop = true;
-        audioSource.Play();
+        audioSource.volume = 0;
 
         isSleeping = false;
+        isSoothing = false;
+        hasNappy = true;
         reasonID = Random.Range(0,3); //max exclusive
+        print("add changing dirty nappy logic");
+    }
+
+    void Update()
+    {
+        if (isSoothing)
+        {
+            if (audioSource.volume > 0) audioSource.volume -= Time.deltaTime/10;
+            else
+            {
+                isSoothing = false;
+                sleeps();
+            }
+        }
+        else if (!isSleeping && !isSoothing)
+        {
+            if (audioSource.volume < 1) audioSource.volume += Time.deltaTime/5;
+        }
+
+        cryUI.text = $"Cry %: {Mathf.Round(audioSource.volume * 100)}";
+        crySlider.value = audioSource.volume;
     }
 
     public void wakeUpBaby()
     {
-        audioSource.clip = cryingClip;
-        audioSource.loop = true;
-        audioSource.Play();
-
         isSleeping = false;
+        audioSource.Play();
         reasonID = 2;
     }
 

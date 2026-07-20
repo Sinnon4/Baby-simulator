@@ -76,3 +76,5 @@ crashlytics-build.properties
 /Assets/TutorialInfo
 Assets/TutorialInfo.meta
 # /Assets/TextMesh Pro
+/Assets/LeanTween
+Assets/LeanTween.meta
