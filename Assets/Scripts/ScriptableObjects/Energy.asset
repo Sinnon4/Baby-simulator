@@ -12,5 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64a64727d67b60449ac133a68b0ffb1d, type: 3}
   m_Name: Energy
   m_EditorClassIdentifier: Assembly-CSharp::FloatValue
-  value: 100
+  value: 0
+  initValue: 100
   maxValue: 100
+  obj: {fileID: 0}
+  objList: []
+  txt: {fileID: 0}

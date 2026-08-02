@@ -12,8 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64a64727d67b60449ac133a68b0ffb1d, type: 3}
   m_Name: Wipes
   m_EditorClassIdentifier: Assembly-CSharp::FloatValue
-  value: 0
+  value: 5
+  initValue: 5
   maxValue: 5
   obj: {fileID: 7135664991618917194, guid: 68882b54e0210ec47b8761de86f53698, type: 3}
-  objList: []
+  objList:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   txt: {fileID: 0}

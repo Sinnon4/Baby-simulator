@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Baby simulator.slnx"
+    "dotnet.defaultSolution": "Baby-simulator.slnx"
 }

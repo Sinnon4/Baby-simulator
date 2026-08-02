@@ -28,6 +28,11 @@ public class UISlider : MonoBehaviour
     // }
     void OnCollisionEnter(Collision collision)
     {
-        print(collision.gameObject.name);
+        // if (collision.gameObject.name != "Player") print(collision.gameObject.name + " collided");
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        // if (other.gameObject.name != "Player") print(other.gameObject.name + " triggered");
     }
 }
