@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64a64727d67b60449ac133a68b0ffb1d, type: 3}
-  m_Name: Nappies
+  m_Name: Clothes
   m_EditorClassIdentifier: Assembly-CSharp::FloatValue
   value: 5
   initValue: 5
   maxValue: 5
-  obj: {fileID: 7135664991618917194, guid: 3f790bb58305f6044b66d6b97c66347b, type: 3}
+  obj: {fileID: 7135664991618917194, guid: 1c322dbe247f0e04aa0cdae4a61551b2, type: 3}
   objList:
   - {fileID: 0}
   - {fileID: 0}

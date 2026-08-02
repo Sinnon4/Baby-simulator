@@ -6,13 +6,14 @@ TagManager:
   tags:
   - Baby
   - Change table
-  - Swing
   - Nappies
   - Wipes
   - Clothes
   - Bin
   - Dirty nappy
   - Crib
+  - Dirty clothes
+  - Wash
   layers:
   - Default
   - TransparentFX

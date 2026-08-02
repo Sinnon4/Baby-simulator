@@ -10,16 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64a64727d67b60449ac133a68b0ffb1d, type: 3}
-  m_Name: Nappies
+  m_Name: Wash
   m_EditorClassIdentifier: Assembly-CSharp::FloatValue
-  value: 5
-  initValue: 5
+  value: 0
+  initValue: 0
   maxValue: 5
-  obj: {fileID: 7135664991618917194, guid: 3f790bb58305f6044b66d6b97c66347b, type: 3}
-  objList:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  obj: {fileID: 498217222443739493, guid: c80a4e07498945448b21c8f57d434361, type: 3}
+  objList: []
   txt: {fileID: 0}

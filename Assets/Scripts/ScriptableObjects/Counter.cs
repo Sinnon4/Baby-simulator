@@ -5,15 +5,14 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Counter")]
 public class Counter : ScriptableObject
 {
-    public float value;
-    public float maxValue;
+    public float value, initValue, maxValue;
     public GameObject obj;
     public List<GameObject> objList = new();
     public TextMeshPro txt;
-
-    public GameObject take(GameObject go, Transform t, Vector3 pos)
+    
+    public GameObject take(GameObject go, Transform t, Vector3 pos) //,v3 scale?
     {
-        if (go.TryGetComponent<BoxCollider>(out BoxCollider bc) && bc.isTrigger) //NEED TO FIGURE OUT BETTER TEST
+        if (go.name == go.tag) //only true for the exisiting objects not instantiated prefabs
             if (value > 0)
             {
                 value--;
@@ -23,7 +22,7 @@ public class Counter : ScriptableObject
 
                 obj.transform.SetParent(t);
                 obj.transform.localPosition = pos;
-                //set size?
+                if (go.tag == "Clothes") obj.transform.localScale = new Vector3(1,1,1)*0.15f;
 
                 objList.Remove(obj);
                 return obj;
@@ -38,5 +37,21 @@ public class Counter : ScriptableObject
             
             return go;
         }
+    }
+
+    public bool deposit(Transform t)
+    {
+        if (value < maxValue)
+        {
+            value++;
+            txt.text = $"{value}";
+            
+            t.SetParent(t);
+            t.localPosition = Vector3.zero;
+
+            objList.Add(t.gameObject);
+            return true;
+        }
+        else return false;
     }
 }

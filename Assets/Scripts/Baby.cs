@@ -8,7 +8,6 @@ These can include;
     - hot: turn on the ceiling fan
     - cold: wrap in blanket
     - gas: burp baby
-    - annoyed (if woken up abruptly): put in swing
 
 When on change table - need to remove clothes, remove nappy, grab wipes, wipe, then reapply nappy and clothes
 Limited amount of clothes available, and laundry has a max capacity
@@ -29,14 +28,14 @@ public class Baby : MonoBehaviour
     /*
     0 - hungry
     1 - dirty
-    2 - annoyed
     */
-    public bool isSleeping, isSoothing, hasNappy;
+    public bool isSleeping, isSoothing, hasClothes, hasNappy, isCleaned;
     [SerializeField] TextMeshProUGUI cryUI; //make indep script for handling UI text
     [SerializeField] Slider crySlider;
 
     [Header("Audio")]
     [SerializeField] public AudioSource audioSource;
+    [SerializeField] TextMeshProUGUI reason;
 
     void Awake()
     {
@@ -44,9 +43,13 @@ public class Baby : MonoBehaviour
 
         isSleeping = false;
         isSoothing = false;
+        hasClothes = true;
         hasNappy = true;
-        reasonID = Random.Range(0,3); //max exclusive
-        print("add changing dirty nappy logic");
+        reasonID = Random.Range(0,2); //max exclusive
+        if (reasonID == 1) isCleaned = false;
+        else isCleaned = true;
+
+        reason.text = $"{reasonID}";
     }
 
     void Update()
@@ -73,12 +76,14 @@ public class Baby : MonoBehaviour
     {
         isSleeping = false;
         audioSource.Play();
-        reasonID = 2;
+        reasonID = 1; //dirty
+        isCleaned = false;
     }
 
     public void sleeps()
     {
         isSleeping = true;
+        audioSource.volume = 0;
         audioSource.Stop();
     }
 }
