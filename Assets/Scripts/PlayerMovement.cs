@@ -45,6 +45,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        MovePlayer();
+        ApplyJumpPhysics();
+    }
+
+    void FixedUpdate()
+    {
         if (Input.GetKeyDown(KeyCode.Mouse2)) //middle click
         {
             if (!stopMouse)
@@ -81,18 +87,10 @@ public class PlayerMovement : MonoBehaviour
         {
             groundCheckTimer -= Time.deltaTime;
         }
-
-    }
-
-    void FixedUpdate()
-    {
-        MovePlayer();
-        ApplyJumpPhysics();
     }
 
     void MovePlayer()
     {
-
         Vector3 movement = (transform.right * moveHorizontal + transform.forward * moveForward).normalized;
         Vector3 targetVelocity = movement * MoveSpeed;
 

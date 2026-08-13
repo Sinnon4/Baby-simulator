@@ -9,11 +9,12 @@ public class ItemHandler : MonoBehaviour
     void Awake()
     {
         item.txt = txt;
-        item.value = 0;
         item.objList.Clear();
 
-        if (item.initValue != 0) //ignore washing and bin
+        if (item.holdObjects) //ignore washing and bin
         {
+            item.value = 0;
+
             for (int i = 1; i <= item.initValue; i++)
             {
                 GameObject obj = Instantiate(item.obj, transform);
@@ -23,5 +24,6 @@ public class ItemHandler : MonoBehaviour
                 item.value++;
             }
         }
+        else item.value = item.initValue;
     }
 }
