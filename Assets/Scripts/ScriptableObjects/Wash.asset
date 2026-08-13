@@ -15,6 +15,10 @@ MonoBehaviour:
   value: 0
   initValue: 0
   maxValue: 5
+  withdrawValue: 2
   obj: {fileID: 498217222443739493, guid: c80a4e07498945448b21c8f57d434361, type: 3}
+  setSize: 1
+  scale: {x: 0.15, y: 0.15, z: 0.15}
+  holdObjects: 0
   objList: []
   txt: {fileID: 0}

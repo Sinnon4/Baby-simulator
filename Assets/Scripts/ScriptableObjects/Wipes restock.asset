@@ -10,15 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64a64727d67b60449ac133a68b0ffb1d, type: 3}
-  m_Name: Bin
+  m_Name: Wipes restock
   m_EditorClassIdentifier: Assembly-CSharp::FloatValue
-  value: 0
-  initValue: 0
-  maxValue: 5
-  withdrawValue: 1
-  obj: {fileID: 498217222443739493, guid: 9ffb5fb640dcf164ba0d21c94380dc58, type: 3}
+  value: 5
+  initValue: 10
+  maxValue: 10
+  withdrawValue: 5
+  obj: {fileID: 7135664991618917194, guid: 0a40b17884a1ee547a1d425e656f3f48, type: 3}
   setSize: 1
   scale: {x: 0.15, y: 0.15, z: 0.15}
   holdObjects: 0
-  objList: []
+  objList:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   txt: {fileID: 0}

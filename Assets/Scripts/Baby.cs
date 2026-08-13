@@ -1,23 +1,3 @@
-/*------------------------------------------
-Game structure:
-Spawn in and baby is crying
-To get baby to stop crying, attempt multiple different things which could be the cause
-These can include;
-    - hungry: feed baby
-    - dirty nappy: change baby
-    - hot: turn on the ceiling fan
-    - cold: wrap in blanket
-    - gas: burp baby
-
-When on change table - need to remove clothes, remove nappy, grab wipes, wipe, then reapply nappy and clothes
-Limited amount of clothes available, and laundry has a max capacity
-Need to wash clothes and dry to restock
-Wipes and nappies need to be restocked from change table drawer
-Dog needs to be taken outside to relieve herself within a given timeframe otherwise she will relieve herself on the floor in baby room and require cleaning
-Thermometer on wall next to fan switch shows temperature
-Baby hunger percentage to determine if needs feed (not shown in UI)
-Tutorial explains guide to when baby needs each thing
-------------------------------------------*/
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

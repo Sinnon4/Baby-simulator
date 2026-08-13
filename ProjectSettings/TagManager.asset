@@ -14,6 +14,11 @@ TagManager:
   - Crib
   - Dirty clothes
   - Wash
+  - Clean clothes
+  - Trash
+  - Door
+  - Nappies restock
+  - Wipes restock
   layers:
   - Default
   - TransparentFX

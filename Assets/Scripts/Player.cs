@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -8,40 +9,21 @@ public class Player : MonoBehaviour
     [SerializeField] Transform baby, babyParent, crib, changeTable;
     [SerializeField] float contactDistance = 2;
     Baby babyScript;
-    bool checking, feeding, stinkyRoom, actioned;
+    bool checking, feeding, stinkyRoom, actioned, washing, washed;
     public GameObject inHand, dirtyNappy, dirtyClothes;
+    [SerializeField] Vector3 holdPos = new Vector3(0, -0.2f, 0.45f);
     //[SerializeField] GameObject actionDial;
-    [SerializeField] Counter energy;
+    [SerializeField] Energy energy;
     [SerializeField] TextMeshProUGUI UI_text, energyUI, heldItem;
-    [SerializeField] Slider energySlider;
+    [SerializeField] Slider energySlider, washSlider;
 
-    [SerializeField] Counter nappies, wipes, clothes, wash, bin;
-/*
-things wanting to add:
-1. have to remove clothes and put in wash, then get clean clothes from drawer.
-Wash has capacity and clean clothes has counter which relies on getting clean laundry to restock
-2. when changing dirty nappy, number of wipes required to clean baby is random number between 1 and 4 - ADD LATER
-3. ability to restock wipes and nappies piles from grabbing new ones from under change table
-Include capacity for under change table - Have to buy more from shops when low
-4. add wondering dog - add in requirement to take dog out (walk up to front door and click) or dog shits on ground (have to clean up shit or room stinky and baby wakes up)
-5. add temperature on wall mounted thermometer which reads either hot, cold, or nice
-6. figure out the cry vs energy system (goal of game is to get back into bed before energy depletes?)
-7. change feeding option to getting a bottle and warming it up then cleaning it properly
-8. add in settings to turn off UI prompts
+    [SerializeField] Counter nappies, wipes, clothes, wash, bin, nappiesRestock, wipesRestock;
 
-NEXT THING TO ADD SHOULD BE FEEDING VIA BOTTLE OR RESTOCKING ITEMS
-
-GAME DESIGN DOC SO FAR
-You are a dad babysitting your newborn baby while your wife is away.
-You need to get the baby back to sleep before you run out of energy.
-Baby may want feed (you need to burp baby afterward or else), change (you need to bin dirty nappy or else), or fix temp.
-You also need to keep cleaning the laundry, emptying the nappy bin, and restocking the clothes, nappies, and wipes
-Every time you get the baby back to sleep you spend the free time (1 token) on upgrading the max capacity of your items.
-*/
     void Awake()
     {
         babyScript = FindAnyObjectByType<Baby>();
         resetBabyPos(crib);
+        energy.value = 100;
 
         inHand = null;
         heldItem.text = "Held item: -";
@@ -56,9 +38,19 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
         energyUI.text = $"Energy %: {Mathf.Round(energy.value)}";
         energySlider.value = energy.value;
 
+        if (washing && washSlider.value < 100)
+        {
+            washSlider.value += 0.2f;
+
+            if (washSlider.value >= 100)
+            {
+                washing = false;
+                washed = true;
+            }
+        }
+
         if (actioned) actioned = false; //reset each frame
 
-        // if (hasBaby)
         if (inHand == baby.gameObject)
         {
             if (!checking && !feeding && Input.GetKeyDown(KeyCode.Mouse1))
@@ -80,7 +72,6 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                     showText("Put down baby");
                     if (Input.GetKeyDown(KeyCode.Mouse0))
                     {
-                        // hasBaby = false;
                         inHand = null;
                         if (hit.collider.CompareTag("Crib")) resetBabyPos(crib);
                         else if (hit.collider.CompareTag("Change table")) resetBabyPos(changeTable);
@@ -110,7 +101,6 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
 
                             if (Input.GetKeyDown(KeyCode.Mouse0))
                             {
-                                // hasBaby = true;
                                 inHand = baby.gameObject;
 
                                 if (babyScript.isCleaned && babyScript.reasonID == 1) babyScript.sleeps();
@@ -122,8 +112,8 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                             else if (Input.GetKeyDown(KeyCode.Mouse1))
                             {
                                 babyScript.hasClothes = false;
-                                inHand = Instantiate(dirtyClothes, Camera.main.transform); //change this to dirtyy clothes
-                                inHand.transform.localPosition = new Vector3(0, -0.2f, 0.45f);
+                                inHand = Instantiate(dirtyClothes, Camera.main.transform);
+                                inHand.transform.localPosition = holdPos;
                                 inHand.transform.localScale = new Vector3(0.4f, 0.04f, 0.4f);
                                 inHand.transform.localRotation = Quaternion.Euler(-45, 0, 0);
                                 heldItem.text = "Held item: Dirty Clothes";
@@ -138,7 +128,7 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                             {
                                 babyScript.hasNappy = false;
                                 inHand = Instantiate(dirtyNappy, Camera.main.transform);
-                                inHand.transform.localPosition = new Vector3(0, -0.2f, 0.45f);
+                                inHand.transform.localPosition = holdPos;
                                 inHand.transform.localScale = new Vector3(0.4f, 0.04f, 0.4f);
                                 inHand.transform.localRotation = Quaternion.Euler(-45, 0, 0);
                                 heldItem.text = "Held item: Dirty Nappy";
@@ -165,10 +155,9 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
 
                         if (Input.GetKeyDown(KeyCode.Mouse0))
                         {
-                            // hasBaby = true;
                             inHand = baby.gameObject;
 
-                            if (babyScript.isSleeping && Random.Range(0f,1f) < 0.3f) babyScript.wakeUpBaby();
+                            if (babyScript.isSleeping && UnityEngine.Random.Range(0f,1f) < 0.3f) babyScript.wakeUpBaby();
 
                             resetBabyPos(Camera.main.transform);
                             showText("");
@@ -178,14 +167,14 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                 }
                 else if (hit.collider.CompareTag("Wipes"))
                 {
-                    if ((hit.collider.gameObject.name == "Wipes" && wipes.value > 0)
-                        || hit.collider.gameObject.name != "Wipes")
+                    if ((hit.collider.gameObject.name == hit.collider.tag && wipes.value > 0)
+                        || hit.collider.gameObject.name != hit.collider.tag)
                     {
                         showText("Grab wipe");
 
                         if (Input.GetKeyDown(KeyCode.Mouse0))
                         {
-                            inHand = wipes.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
+                            inHand = wipes.take(hit.collider.gameObject, Camera.main.transform, holdPos);
                             actioned = true;
                         }
                     }
@@ -193,14 +182,14 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                 }
                 else if (hit.collider.CompareTag("Nappies"))
                 {
-                    if ((hit.collider.gameObject.name == "Nappies" && nappies.value > 0)
-                        || hit.collider.gameObject.name != "Nappies")
+                    if ((hit.collider.gameObject.name == hit.collider.tag && nappies.value > 0)
+                        || hit.collider.gameObject.name != hit.collider.tag)
                     {
                         showText("Grab nappy");
 
                         if (Input.GetKeyDown(KeyCode.Mouse0))
                         {
-                            inHand = nappies.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
+                            inHand = nappies.take(hit.collider.gameObject, Camera.main.transform, holdPos);
                             actioned = true;
                         }
                     }
@@ -208,37 +197,105 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                 }
                 else if (hit.collider.CompareTag("Clothes"))
                 {
-                    if ((hit.collider.gameObject.name == "Clothes" && clothes.value > 0)
-                        || hit.collider.gameObject.name != "Clothes")
+                    if ((hit.collider.gameObject.name == hit.collider.tag && clothes.value > 0)
+                        || hit.collider.gameObject.name != hit.collider.tag)
                     {
                         showText("Grab clothes");
 
                         if (Input.GetKeyDown(KeyCode.Mouse0))
                         {
-                            inHand = clothes.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
+                            inHand = clothes.take(hit.collider.gameObject, Camera.main.transform, holdPos);
                             actioned = true;
                         }
                     }
                     else showText("Need more clothes");
                 }
-                else if (hit.collider.CompareTag("Dirty nappy") || hit.collider.CompareTag("Dirty clothes"))
+                else if (hit.collider.CompareTag("Wipes restock"))
                 {
-                    if (hit.collider.CompareTag("Dirty nappy")) showText("Pickup dirty nappy");
-                    else if (hit.collider.CompareTag("Dirty clothes")) showText("Pickup dirty clothes");
+                    if ((hit.collider.gameObject.name == hit.collider.tag && wipesRestock.value >= wipesRestock.withdrawValue)
+                        || hit.collider.gameObject.name != hit.collider.tag)
+                    {
+                        showText("Grab wipes pack");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            inHand = wipesRestock.take(hit.collider.gameObject, Camera.main.transform, holdPos);
+                            actioned = true;
+                        }
+                    }
+                    else showText("Need to buy more packs of wipes");
+                }
+                else if (hit.collider.CompareTag("Nappies restock"))
+                {
+                    if ((hit.collider.gameObject.name == hit.collider.tag && nappiesRestock.value >= nappiesRestock.withdrawValue)
+                        || hit.collider.gameObject.name != hit.collider.tag)
+                    {
+                        showText("Grab nappies pack");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            inHand = nappiesRestock.take(hit.collider.gameObject, Camera.main.transform, holdPos);
+                            actioned = true;
+                        }
+                    }
+                    else showText("Need to buy more packs of nappies");
+                }
+                else if (hit.collider.CompareTag("Dirty nappy") || hit.collider.CompareTag("Dirty clothes")
+                        || hit.collider.CompareTag("Trash") || hit.collider.CompareTag("Clean clothes"))
+                {
+                    if (hit.collider.CompareTag("Dirty nappy")) showText("Grab dirty nappy");
+                    else if (hit.collider.CompareTag("Dirty clothes")) showText("Grab dirty clothes");
+                    else if (hit.collider.CompareTag("Trash")) showText("Grab trash");
+                    else if (hit.collider.CompareTag("Clean clothes")) showText("Grab clean clothes");
 
                     if (Input.GetKeyDown(KeyCode.Mouse0))
                     {
+                        // pickup(hit.collider.gameObject);
                         inHand = hit.collider.gameObject;
                         inHand.transform.SetParent(Camera.main.transform);
-                        inHand.transform.localPosition = new Vector3(0, -0.2f, 0.45f);
-                        inHand.transform.localScale = new Vector3(0.4f, 0.04f, 0.4f);
-                        print("may want to vary size depending on object");
-                        inHand.transform.localRotation = Quaternion.Euler(-45, 0, 0);
+                        inHand.transform.localPosition = holdPos;
                         inHand.GetComponent<Rigidbody>().isKinematic = true;
                         inHand.GetComponent<BoxCollider>().isTrigger = true;
 
-                        if (hit.collider.CompareTag("Dirty nappy")) heldItem.text = "Held item: Dirty Nappy";
-                        else if (hit.collider.CompareTag("Dirty clothes")) heldItem.text = "Held item: Dirty Clothes";
+                        heldItem.text = $"Held item: {hit.collider.tag}";
+
+                        actioned = true;
+                    }
+                }
+                else if (hit.collider.CompareTag("Wash") && wash.value >= wash.withdrawValue)
+                {
+                    if (!washing && !washed)
+                    {
+                        showText("Wash clothes");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0)) washing = true;
+                    }
+                    else if (washing && !washed) showText("Washing...");
+                    else if (washed)
+                    {
+                        showText("Take clothes");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            washed = false;
+                            washSlider.value = 0;
+                            inHand = wash.take(hit.collider.gameObject, Camera.main.transform, holdPos);
+                            
+                            heldItem.text = "Held item: Clean laundry";
+                        
+                            actioned = true;
+                        }
+                    }
+                }
+                else if (hit.collider.CompareTag("Bin") && bin.value >= bin.withdrawValue)
+                {
+                    showText("Empty bin");
+
+                    if (Input.GetKeyDown(KeyCode.Mouse0))
+                    {
+                        inHand = bin.take(hit.collider.gameObject, Camera.main.transform, holdPos);
+                        
+                        heldItem.text = "Held item: Trash";
                     
                         actioned = true;
                     }
@@ -252,11 +309,12 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                     if (hit.collider.CompareTag("Baby")) showText("Need to bin dirty nappy");
                     else if (hit.collider.CompareTag("Bin"))
                     {
-                        showText("Bin nappy");
+                        if (bin.value < bin.maxValue) showText("Bin nappy");
+                        else showText("Need to empty bin!");
 
-                        if (Input.GetKeyDown(KeyCode.Mouse0) && bin.deposit(inHand.transform))
+                        if (Input.GetKeyDown(KeyCode.Mouse0) && bin.deposit())
                         {
-                            Destroy(inHand);
+                            Destroy(inHand); //remove this line if adding the transform self condition
                             inHand = null;
 
                             if (stinkyRoom) stinkyRoom = false;
@@ -271,9 +329,90 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                     if (hit.collider.CompareTag("Baby")) showText("Need to put dirty clothes in the wash");
                     else if (hit.collider.CompareTag("Wash"))
                     {
-                        showText("Wash clothes");
+                        if (washed) showText("Remove clean clothes first!");
+                        else if (wash.value < wash.maxValue) showText("Wash clothes");
+                        else showText("Need to empty machine!");
 
-                        if (Input.GetKeyDown(KeyCode.Mouse0) && wash.deposit(inHand.transform))
+                        if (Input.GetKeyDown(KeyCode.Mouse0) && wash.deposit())
+                        {
+                            Destroy(inHand);
+                            inHand = null;
+
+                            heldItem.text = "Held item: -";
+                        }
+                    }
+                    else showText("");
+                }
+                else if (inHand.tag == "Clean clothes")
+                {
+                    if (hit.collider.CompareTag("Baby")) showText("Need to put clean clothes back in drawer");
+                    else if (hit.collider.CompareTag("Clothes") && hit.collider.gameObject.name == hit.collider.tag)
+                    {
+                        showText("Restock clothes");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            clothes.value = math.min(clothes.value + wash.withdrawValue, clothes.maxValue);
+                            print("bug here if holding more than the withdraw amount");
+                            clothes.txt.text = (clothes.value == clothes.maxValue) ? "MAX" : $"{clothes.value}";
+                            Destroy(inHand);
+                            inHand = null;
+
+                            heldItem.text = "Held item: -";
+                        }
+                    }
+                    else showText("");
+                }
+                else if (inHand.tag == "Nappies restock")
+                {
+                    if (hit.collider.CompareTag("Baby")) showText("Need to put clean clothes back in drawer");
+                    else if (hit.collider.CompareTag("Nappies") && hit.collider.gameObject.name == hit.collider.tag)
+                    {
+                        showText("Restock nappies");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            nappies.deposit(nappiesRestock.withdrawValue, hit.collider.transform);
+                            // nappies.value = math.min(nappies.value + nappiesRestock.withdrawValue, nappies.maxValue);
+                            print("bug here if holding more than the withdraw amount");
+                            nappies.txt.text = (nappies.value == nappies.maxValue) ? "MAX" : $"{nappies.value}";
+                            Destroy(inHand);
+                            inHand = null;
+
+                            heldItem.text = "Held item: -";
+                        }
+                    }
+                    else showText("");
+                }
+                else if (inHand.tag == "Wipes restock")
+                {
+                    if (hit.collider.CompareTag("Baby")) showText("Need to put clean clothes back in drawer");
+                    else if (hit.collider.CompareTag("Wipes") && hit.collider.gameObject.name == hit.collider.tag)
+                    {
+                        showText("Restock wipes");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            wipes.deposit(wipesRestock.withdrawValue, hit.collider.transform);
+                            // wipes.value = math.min(wipes.value + wipesRestock.withdrawValue, wipes.maxValue);
+                            print("bug here if holding more than the withdraw amount");
+                            wipes.txt.text = (wipes.value == wipes.maxValue) ? "MAX" : $"{wipes.value}";
+                            Destroy(inHand);
+                            inHand = null;
+
+                            heldItem.text = "Held item: -";
+                        }
+                    }
+                    else showText("");
+                }
+                else if (inHand.tag == "Trash")
+                {
+                    if (hit.collider.CompareTag("Baby")) showText("Need to throw trash out (use front door)");
+                    else if (hit.collider.CompareTag("Door"))
+                    {
+                        showText("Throw trash outside");
+
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
                         {
                             Destroy(inHand);
                             inHand = null;
@@ -347,8 +486,6 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
                                     heldItem.text = "Held item: -";
 
                                     babyScript.hasClothes = true;
-
-                                    // if (babyScript.reasonID == 1) babyScript.isSoothing = true;
                                 }
                             }
                             else showText("Baby needs a nappy!");
@@ -365,284 +502,9 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
 
         if (inHand is not null && Input.GetKeyDown(KeyCode.Mouse0) && !actioned)
         {
-            if (inHand.tag == "Dirty nappy") stinkyRoom = true;
+            if (inHand.tag == "Dirty nappy" || inHand.tag == "Trash") stinkyRoom = true;
             dropItem();
         }
-        // }
-
-
-
-
-    //     else if (babyParent == crib)
-    //     {
-    //         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, contactDistance))
-    //         {
-    //             if (inHand is null)
-    //             {
-    //                 if (hit.collider.CompareTag("Baby"))
-    //                 {
-    //                     showText("Pick up baby");
-
-    //                     if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                     {
-    //                         hasBaby = true;
-
-    //                         if (babyScript.isSleeping && Random.Range(0f,1f) < 0.3f) babyScript.wakeUpBaby();
-
-    //                         resetBabyPos(Camera.main.transform);
-    //                         showText("");
-    //                     }
-    //                 }
-    //                 else if (hit.collider.CompareTag("Wipes"))
-    //                 {
-    //                     if ((hit.collider.gameObject.name == "Wipes" && wipes.value > 0)
-    //                         || hit.collider.gameObject.name != "Wipes")
-    //                     {
-    //                         showText("Grab wipe");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             inHand = wipes.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-    //                         }
-    //                     }
-    //                     else showText("Need more wipes");
-    //                 }
-    //                 else if (hit.collider.CompareTag("Nappies"))
-    //                 {
-    //                     if ((hit.collider.gameObject.name == "Nappies" && nappies.value > 0)
-    //                         || hit.collider.gameObject.name != "Nappies")
-    //                     {
-    //                         showText("Grab nappy");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             inHand = nappies.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-    //                         }
-    //                     }
-    //                     else showText("Need more nappies");
-    //                 }
-    //                 // else if (hit.collider.CompareTag("Clothes"))
-    //                 // {
-    //                 //     if ((hit.collider.gameObject.name == "Clothes" && clothes.value > 0)
-    //                 //         || hit.collider.gameObject.name != "Clothes")
-    //                 //     {
-    //                 //         showText("Grab clothes");
-
-    //                 //         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                 //         {
-    //                 //             inHand = clothes.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-    //                 //         }
-    //                 //     }
-    //                 //     else showText("Need more clothes");
-    //                 // }
-    //                 else showText("");
-    //             }
-    //             else if (inHand is not null && Input.GetKeyDown(KeyCode.Mouse0))
-    //             {
-    //                 dropItem();
-    //             }
-    //             else showText("");
-    //         }
-    //         else if (inHand is not null && Input.GetKeyDown(KeyCode.Mouse0))
-    //         {
-    //             dropItem();
-    //         }
-    //         else showText("");
-    //     }
-
-    //     else if (babyParent == changeTable)
-    //     {
-    //         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, contactDistance))
-    //         {
-    //             if (inHand is not null)
-    //             {
-    //                 if (inHand.tag == "Wipes" && hit.collider.CompareTag("Baby"))
-    //                 {
-    //                     showText("Wipe baby");
-
-    //                     if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                     {
-    //                         Destroy(inHand);
-    //                         inHand = null;
-
-    //                         heldItem.text = "Held item: -";
-
-    //                         print("cleaned bum");
-    //                         cleaned = true;
-    //                     }
-    //                 }
-    //                 else if (!babyScript.hasNappy && inHand.tag == "Nappies" && hit.collider.CompareTag("Baby"))
-    //                 {
-    //                     if (!cleaned) showText("Baby needs a wipe!");
-    //                     else
-    //                     {
-    //                         showText("Put on nappy");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             Destroy(inHand);
-    //                             inHand = null;
-
-    //                             heldItem.text = "Held item: -";
-
-    //                             print("new nappy");
-    //                             babyScript.hasNappy = true;
-    //                         }
-    //                     }
-    //                 }
-    //                 else if (inHand.tag == "Dirty nappy")
-    //                 {
-    //                     if (hit.collider.CompareTag("Baby")) showText("Need to bin dirty nappy");
-    //                     else if (hit.collider.CompareTag("Bin"))
-    //                     {
-    //                         showText("Bin nappy");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             Destroy(inHand);
-    //                             inHand = null;
-
-    //                             heldItem.text = "Held item: -";
-    //                         }
-    //                     }
-    //                     else showText("");
-    //                 }
-    //                 else if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                 {
-    //                     if (inHand.tag == "Dirty nappy") stinkyRoom = true;
-    //                     dropItem();
-    //                 }
-    //                 else showText("");
-    //             }
-    //             else //inHand is null
-    //             {
-    //                 if (hit.collider.CompareTag("Baby"))
-    //                 {
-    //                     if (babyScript.hasNappy)
-    //                     {
-    //                         showText("Pick up baby (LC) or remove nappy (RC)");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             hasBaby = true;
-
-    //                             if (cleaned && babyScript.reasonID == 1) { babyScript.sleeps(); cleaned = false; }
-
-    //                             resetBabyPos(Camera.main.transform);
-    //                             showText("");
-    //                         }
-    //                         else if (Input.GetKeyDown(KeyCode.Mouse1))
-    //                         {
-    //                             babyScript.hasNappy = false;
-    //                             inHand = Instantiate(dirtyNappy, Camera.main.transform);
-    //                             inHand.transform.localPosition = new Vector3(0, -0.2f, 0.45f);
-    //                             inHand.transform.localScale = new Vector3(0.4f, 0.04f, 0.4f);
-    //                             inHand.transform.localRotation = Quaternion.Euler(-45, 0, 0);
-    //                             heldItem.text = "Held item: Dirty Nappy";
-    //                         }
-    //                     }
-    //                     else if (!babyScript.hasNappy && !cleaned)
-    //                     {
-    //                         showText("Baby needs a wipe!");
-    //                     }
-    //                     else showText("Baby needs a nappy!");
-    //                 }
-                    
-    //                 else if (hit.collider.CompareTag("Wipes"))
-    //                 {
-    //                     if ((hit.collider.gameObject.name == "Wipes" && wipes.value > 0)
-    //                         || hit.collider.gameObject.name != "Wipes")
-    //                     {
-    //                         showText("Grab wipe");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             inHand = wipes.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-    //                         }
-    //                     }
-    //                     else showText("Need more wipes");
-    //                 }
-    //                 else if (hit.collider.CompareTag("Nappies"))
-    //                 {
-    //                     if ((hit.collider.gameObject.name == "Nappies" && nappies.value > 0)
-    //                         || hit.collider.gameObject.name != "Nappies")
-    //                     {
-    //                         showText("Grab nappy");
-
-    //                         if (Input.GetKeyDown(KeyCode.Mouse0))
-    //                         {
-    //                             inHand = nappies.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-    //                         }
-    //                     }
-    //                     else showText("Need more nappies");
-    //                 }
-    //                 else showText("");
-    //             }
-    //         }
-    //         else if (inHand is not null && Input.GetKeyDown(KeyCode.Mouse0))
-    //         {
-    //             dropItem();
-    //         }
-    //         else showText("");
-        // }
-
-        // else if (babyParent == swing)
-        // {
-        //     if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, contactDistance))
-        //     {
-        //         if (inHand is null)
-        //         {
-        //             if (hit.collider.CompareTag("Baby"))
-        //             {
-        //                 showText("Pick up baby");
-
-        //                 if (Input.GetKeyDown(KeyCode.Mouse0))
-        //                 {
-        //                     hasBaby = true;
-
-                            // babyScript.isSoothing = false; //if picking up from swing
-
-        //                     resetBabyPos(Camera.main.transform);
-        //                     showText("");
-        //                 }
-        //             }
-        //             else if (hit.collider.CompareTag("Wipes"))
-        //             {
-        //                 if ((hit.collider.gameObject.name == "Wipes" && wipes.value > 0)
-        //                     || hit.collider.gameObject.name != "Wipes")
-        //                 {
-        //                     showText("Grab wipe");
-
-        //                     if (Input.GetKeyDown(KeyCode.Mouse0))
-        //                     {
-        //                         inHand = wipes.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-        //                     }
-        //                 }
-        //                 else showText("Need more wipes");
-        //             }
-        //             else if (hit.collider.CompareTag("Nappies"))
-        //             {
-        //                 if ((hit.collider.gameObject.name == "Nappies" && nappies.value > 0)
-        //                     || hit.collider.gameObject.name != "Nappies")
-        //                 {
-        //                     showText("Grab nappy");
-
-        //                     if (Input.GetKeyDown(KeyCode.Mouse0))
-        //                     {
-        //                         inHand = nappies.take(hit.collider.gameObject, Camera.main.transform, new Vector3(0, -0.2f, 0.45f));
-        //                     }
-        //                 }
-        //                 else showText("Need more nappies");
-        //             }
-        //             else showText("");
-        //         }
-        //     }
-        //     else if (inHand is not null && Input.GetKeyDown(KeyCode.Mouse0))
-        //     {
-        //         dropItem();
-        //     }
-        //     else showText("");
-        // }
     }
 
     void resetBabyPos(Transform parent)
@@ -664,21 +526,15 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
         }
     }
 
-    // void pickup(GameObject item, GameObject hitObj, string name)
+    // void pickup(GameObject item/*, GameObject hitObj, string name*/)
     // {
-    //     if (hitObj.name == name)
-    //     { inHand = Instantiate(item, Camera.main.transform); }
-    //     else //if picking up previous item
-    //     {
-    //         inHand = hitObj;
-    //         inHand.transform.SetParent(Camera.main.transform);
-    //         inHand.GetComponent<Rigidbody>().isKinematic = true;
-    //         inHand.GetComponent<BoxCollider>().isTrigger = true;
-    //     }
-        
-    //     inHand.transform.localPosition = new Vector3(0, -0.2f, 0.45f);
-    //     heldItem.text = $"Held item: {name}";
-    //     print("move helditem text for new setup");
+    //     inHand = item;
+    //     inHand.transform.SetParent(Camera.main.transform);
+    //     inHand.transform.localPosition = holdPos;
+    //     // inHand.transform.localScale = Vector3.one * 0.15f;
+    //     // inHand.transform.localRotation = Quaternion.Euler(-45, 0, 0);
+    //     inHand.GetComponent<Rigidbody>().isKinematic = true;
+    //     inHand.GetComponent<BoxCollider>().isTrigger = true;
     // }
 
     void dropItem()
@@ -691,13 +547,6 @@ Every time you get the baby back to sleep you spend the free time (1 token) on u
         heldItem.text = "Held item: -";
         //add condition to destroy old objects if >20 exists
     }
-
-    // public void resetRound() //public?
-    // {
-    //     print("add more here  for round reset (location respawn)");
-    //     cleaned = false;
-    //     // babyScript.isSleeping = false;
-    // }
 
     void showText(string msg)
     {

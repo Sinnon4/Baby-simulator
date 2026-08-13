@@ -9,12 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64a64727d67b60449ac133a68b0ffb1d, type: 3}
+  m_Script: {fileID: 11500000, guid: 1b070a13f086c3547be1cc7bc590c002, type: 3}
   m_Name: Energy
-  m_EditorClassIdentifier: Assembly-CSharp::FloatValue
-  value: 0
-  initValue: 100
-  maxValue: 100
-  obj: {fileID: 0}
-  objList: []
-  txt: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::Energy
+  value: 95.58906
